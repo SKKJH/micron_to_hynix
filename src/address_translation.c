@@ -152,40 +152,37 @@ void RemapBadBlock()
 				}
 			}
 
-			if (LUNS_PER_DIE > 1)
+			//lun1
+			if(phyBlockMapPtr->phyBlock[dieNo][blockNo+TOTAL_BLOCKS_PER_LUN].bad)
 			{
-				//lun1
-				if(phyBlockMapPtr->phyBlock[dieNo][blockNo+TOTAL_BLOCKS_PER_LUN].bad)
+				if(reservedBlockOfLun1[dieNo] < TOTAL_BLOCKS_PER_DIE)
 				{
-					if(reservedBlockOfLun1[dieNo] < TOTAL_BLOCKS_PER_DIE)
+					remapFlag = 1;
+					while(phyBlockMapPtr->phyBlock[dieNo][reservedBlockOfLun1[dieNo]].bad)
 					{
-						remapFlag = 1;
-						while(phyBlockMapPtr->phyBlock[dieNo][reservedBlockOfLun1[dieNo]].bad)
+						reservedBlockOfLun1[dieNo]++;
+						if(reservedBlockOfLun1[dieNo] >= TOTAL_BLOCKS_PER_DIE)
 						{
-							reservedBlockOfLun1[dieNo]++;
-							if(reservedBlockOfLun1[dieNo] >= TOTAL_BLOCKS_PER_DIE)
-							{
-								remapFlag = 0;
-								break;
-							}
+							remapFlag = 0;
+							break;
 						}
+					}
 
-						if(remapFlag)
-						{
-							phyBlockMapPtr->phyBlock[dieNo][blockNo+TOTAL_BLOCKS_PER_LUN].remappedPhyBlock  = reservedBlockOfLun1[dieNo];
-							reservedBlockOfLun1[dieNo]++;
-						}
-						else
-						{
-							xil_printf("No reserved block - Ch %x Way %x virtualBlock %d is bad block \r\n",  Vdie2PchTranslation(dieNo), Vdie2PwayTranslation(dieNo), blockNo+USER_BLOCKS_PER_LUN);
-							badBlockCount[dieNo]++;
-						}
+					if(remapFlag)
+					{
+						phyBlockMapPtr->phyBlock[dieNo][blockNo+TOTAL_BLOCKS_PER_LUN].remappedPhyBlock  = reservedBlockOfLun1[dieNo];
+						reservedBlockOfLun1[dieNo]++;
 					}
 					else
 					{
 						xil_printf("No reserved block - Ch %x Way %x virtualBlock %d is bad block \r\n",  Vdie2PchTranslation(dieNo), Vdie2PwayTranslation(dieNo), blockNo+USER_BLOCKS_PER_LUN);
 						badBlockCount[dieNo]++;
 					}
+				}
+				else
+				{
+					xil_printf("No reserved block - Ch %x Way %x virtualBlock %d is bad block \r\n",  Vdie2PchTranslation(dieNo), Vdie2PwayTranslation(dieNo), blockNo+USER_BLOCKS_PER_LUN);
+					badBlockCount[dieNo]++;
 				}
 			}
 		}
